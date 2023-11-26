@@ -5,12 +5,6 @@
 # export AWS_ACCESS_KEY_ID=
 # export AWS_SECRET_ACCESS_KEY=
 # export RESTIC_REPOSITORY=s3:https://s3.us-east-1.amazonaws.com/bucket-name
-# export DB_NAME_A=
-# export DB_USERNAME_A=
-# export DB_PASSWORD_A=
-# export DB_NAME_B=
-# export DB_USERNAME_B=
-# export DB_PASSWORD_B=
 #
 # - /home/web/restic/pw
 # This file should only contain the restic password
@@ -28,6 +22,7 @@
 . /home/web/restic/restic.conf
 
 # First, back up mysql db and other directories to a local restic repository
+# This is handled by CloudPanel, so no longer needed here
 # for db in ${DB_NAMES[@]}
 # do
 #   mysqldump --defaults-extra-file="/home/web/restic/${db}.sqlpwd" --databases ${db} --no-tablespaces > /home/web/backups/${db}.sql
