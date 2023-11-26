@@ -34,15 +34,13 @@ BACKUP_THIS_DIR="/home/"
 SPECIFIC_SNAPSHOT=""
 
 # ------------------------------------------------------
-LOG_DIR="$(dirname "${LOG_FILEPATH}")"
+# Make the log dir
+mkdir -p $(dirname "${LOG_FILEPATH}")
 
 # Everything below will go to the file $LOG_FILEPATH:
 exec 3>&1 4>&2
 trap 'exec 2>&4 1>&3' 0 1 2 3
 exec 1>$LOG_FILEPATH 2>&1
-
-# Make the log dir
-mkdir -p $LOG_DIR
 
 # Get config variables
 . $CONFIG_FILE
@@ -56,21 +54,27 @@ mkdir -p $LOG_DIR
 # done
 
 # Backup to s3
-echo "\nStarting backup..."
+printf "\nStarting backup...\n"
 restic backup $BACKUP_THIS_DIR --password-file $PASSWORD_FILE
 
 # Prune old backups
-echo "\nRemoving old backups..."
+printf "\nRemoving old backups...\n"
 restic forget --keep-last $SNAPSHOTS_TO_KEEP --prune --password-file $PASSWORD_FILE
 
 # Log snapshots
-echo "\nLogging snapshots..."
+printf "\nLogging snapshots...\n"
 restic snapshots --password-file $PASSWORD_FILE
+
+# Verify integrity of backups
+printf "\nVerifying integrity of backups...\n"
+restic check --password-file $PASSWORD_FILE
 
 # Remove specific snapshots
 if [ -z "$SPECIFIC_SNAPSHOT" ]; then
   :
 else
-  echo "\nRemoving Snapshot id ${SPECIFIC_SNAPSHOT}..."
+  printf "\nRemoving Snapshot id ${SPECIFIC_SNAPSHOT}...\n"
   restic forget $SPECIFIC_SNAPSHOT --password-file $PASSWORD_FILE
 fi
+
+printf "\nBackup complete...\n"
