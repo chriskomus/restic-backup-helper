@@ -17,9 +17,35 @@
 # Then set required permission and recommended ownership:
 # sudo chmod 600 /home/web/restic/${DB_NAME_A}.sqlpwd && sudo chown $USER:nogroup /home/web/restic/${DB_NAME_A}.sqlpwd
 # ------------------------------------------------------
+# Log filename
+LOG_DATE=$(date +'%Y%m%d%H%M%S')
+LOG_FILEPATH="/home/web/git/simple-restic-backups/log/${LOG_DATE}.log"
+
+# Number of snapshots to keep
+SNAPSHOTS_TO_KEEP=14
+
+# PATH TO
+CONFIG_FILE="/home/web/restic/restic.conf"
+PASSWORD_FILE="/home/web/restic/pw"
+
+BACKUP_THIS_DIR="/home/"
+
+# Remove a specific snapshot
+SPECIFIC_SNAPSHOT=""
+
+# ------------------------------------------------------
+LOG_DIR="$(dirname "${LOG_FILEPATH}")"
+
+# Everything below will go to the file $LOG_FILEPATH:
+exec 3>&1 4>&2
+trap 'exec 2>&4 1>&3' 0 1 2 3
+exec 1>$LOG_FILEPATH 2>&1
+
+# Make the log dir
+mkdir -p $LOG_DIR
 
 # Get config variables
-. /home/web/restic/restic.conf
+. $CONFIG_FILE
 
 # First, back up mysql db and other directories to a local restic repository
 # This is handled by CloudPanel, so no longer needed here
@@ -29,6 +55,22 @@
 #   echo "mysqldump: Backing up ${db} to /home/web/backups/${db}.sql"
 # done
 
-# Next, backup to s3
-restic backup /home/ --password-file /home/web/restic/pw
-restic forget --keep-last 1 --prune --password-file /home/web/restic/pw
+# Backup to s3
+echo "Starting backup..."
+restic backup $BACKUP_THIS_DIR --password-file $PASSWORD_FILE
+
+# Prune old backups
+echo "Removing old backups..."
+restic forget --keep-last $SNAPSHOTS_TO_KEEP --prune --password-file $PASSWORD_FILE
+
+# Log snapshots
+echo "Logging Snapsots..."
+restic snapshots --password-file $PASSWORD_FILE
+
+# Remove specific snapshots
+if [ -z "$SPECIFIC_SNAPSHOT" ]; then
+  :
+else
+  echo "Removing Snapshot id ${SPECIFIC_SNAPSHOT}..."
+  restic forget $SPECIFIC_SNAPSHOT --password-file $PASSWORD_FILE
+fi
