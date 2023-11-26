@@ -56,21 +56,21 @@ mkdir -p $LOG_DIR
 # done
 
 # Backup to s3
-echo "Starting backup..."
+echo "\nStarting backup..."
 restic backup $BACKUP_THIS_DIR --password-file $PASSWORD_FILE
 
 # Prune old backups
-echo "Removing old backups..."
+echo "\nRemoving old backups..."
 restic forget --keep-last $SNAPSHOTS_TO_KEEP --prune --password-file $PASSWORD_FILE
 
 # Log snapshots
-echo "Logging Snapsots..."
+echo "\nLogging snapshots..."
 restic snapshots --password-file $PASSWORD_FILE
 
 # Remove specific snapshots
 if [ -z "$SPECIFIC_SNAPSHOT" ]; then
   :
 else
-  echo "Removing Snapshot id ${SPECIFIC_SNAPSHOT}..."
+  echo "\nRemoving Snapshot id ${SPECIFIC_SNAPSHOT}..."
   restic forget $SPECIFIC_SNAPSHOT --password-file $PASSWORD_FILE
 fi
